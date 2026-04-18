@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spark
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: spark
+  template:
+    metadata:
+      labels:
+        app: spark
+      annotations:                     
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+    spec:
+      containers:
+      - name: spark
+        image: docker.io/library/spark:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8081 
+          name: metrics
+        command: ["/opt/spark/bin/spark-submit"]
+        args:
+          - "--conf"
+          - "spark.jars.ivy=/tmp/.ivy2"
+          - "--driver-memory"         
+          - "512m"                    
+          - "--executor-memory"       
+          - "512m"                    
+          - "--packages"
+          # ⬇️ CHANGE 10.2.0 to 10.4.0 HERE ⬇️
+          - "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.mongodb.spark:mongo-spark-connector_2.12:10.4.0"
+          - "/app/spark_stream.py"

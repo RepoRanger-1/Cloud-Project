@@ -1,0 +1,23 @@
+[
+  {
+    "user_id": "U201",
+    "event_type": "purchase",
+    "product_id": "P10",
+    "timestamp": "2026-03-31T10:00:00Z",
+    "price": 300
+  },
+  {
+    "user_id": "U202",
+    "event_type": "view_product",
+    "product_id": "P11",
+    "timestamp": "2026-03-31T10:01:00Z",
+    "price": 0
+  },
+  {
+    "user_id": "U203",
+    "event_type": "add_to_cart",
+    "product_id": "P12",
+    "timestamp": "2026-03-31T10:02:00Z",
+    "price": 150
+  }
+]
