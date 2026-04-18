@@ -1,0 +1,37 @@
+# Run after the streaming job has written Parquet under /app/data/output (wait ~1–2 minutes of events).
+# kubectl apply -f k8s/spark-batch-job.yaml
+# kubectl logs job/spark-batch -f
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spark-batch
+spec:
+  ttlSecondsAfterFinished: 86400
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        fsGroup: 185
+      containers:
+      - name: batch
+        image: spark:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          runAsUser: 185
+          runAsNonRoot: true
+        env:
+        - name: PIPELINE_DATA_DIR
+          value: "/app/data"
+        command: ["/opt/spark/bin/spark-submit"]
+        args:
+          - "--master"
+          - "local[*]"
+          - "/app/spark_batch.py"
+        volumeMounts:
+        - name: pipeline-data
+          mountPath: /app/data
+      volumes:
+      - name: pipeline-data
+        persistentVolumeClaim:
+          claimName: ecommerce-pipeline-pvc

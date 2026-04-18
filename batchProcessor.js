@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://127.0.0.1:27017/ecommerce');
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ecommerce';
+
+mongoose.connect(MONGODB_URI);
 
 const eventSchema = new mongoose.Schema({
     user_id: String,
@@ -12,9 +14,8 @@ const eventSchema = new mongoose.Schema({
 
 const Event = mongoose.model('Event', eventSchema);
 
-// 🔥 Run every 5 seconds
 setInterval(async () => {
-    console.log("\n📦 Running Batch Processing...");
+    console.log('\nRunning batch processing (Mongo stats from consumer collection `events`)...');
 
     const totalEvents = await Event.countDocuments();
 
@@ -29,9 +30,9 @@ setInterval(async () => {
 
     const revenue = revenueData[0]?.total || 0;
 
-    console.log("📊 Batch Stats:");
-    console.log("Total Events:", totalEvents);
-    console.log("Purchases:", purchases);
-    console.log("Revenue:", revenue);
+    console.log('Batch stats:');
+    console.log('Total Events:', totalEvents);
+    console.log('Purchases:', purchases);
+    console.log('Revenue:', revenue);
 
 }, 5000);

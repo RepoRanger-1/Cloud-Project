@@ -1,11 +1,13 @@
 const fs = require('fs');
 const kafka = require('kafka-node');
 
-const client = new kafka.KafkaClient({ kafkaHost: 'localhost:9092' });
+const KAFKA = process.env.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092';
+
+const client = new kafka.KafkaClient({ kafkaHost: KAFKA });
 const producer = new kafka.Producer(client);
 
 producer.on('ready', () => {
-    console.log("Batch Producer ready");
+    console.log('Batch Producer ready (Kafka:', KAFKA + ')');
 
     const data = JSON.parse(fs.readFileSync('events.json'));
 
@@ -18,7 +20,7 @@ producer.on('ready', () => {
         });
     });
 
-    console.log("Batch upload completed");
+    console.log('Batch upload completed');
 });
 
 producer.on('error', (err) => {

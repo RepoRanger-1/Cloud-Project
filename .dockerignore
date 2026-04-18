@@ -1,0 +1,7 @@
+node_modules
+.git
+data
+**/checkpoints
+**/__pycache__
+*.pyc
+.DS_Store

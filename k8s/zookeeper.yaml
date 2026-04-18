@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: zookeeper
-        image: zookeeper:latest
+        image: zookeeper:3.9
         ports:
           - containerPort: 2181
 ---

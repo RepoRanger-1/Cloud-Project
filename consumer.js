@@ -3,7 +3,9 @@ const mongoose = require('mongoose');
 const express = require('express');
 const promClient = require('prom-client');
 
-// --- 1. METRICS SETUP ---
+const KAFKA = process.env.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ecommerce';
+
 const app = express();
 const register = new promClient.Registry();
 promClient.collectDefaultMetrics({ register });
@@ -16,7 +18,7 @@ const eventsProcessedCounter = new promClient.Counter({
 const processingLatency = new promClient.Histogram({
     name: 'ecommerce_processing_delay_ms',
     help: 'Time difference between event creation and consumption (ms)',
-    buckets: [10, 50, 100, 250, 500, 1000, 5000] // Categorizes delay speeds
+    buckets: [10, 50, 100, 250, 500, 1000, 5000]
 });
 
 register.registerMetric(eventsProcessedCounter);
@@ -26,30 +28,25 @@ app.get('/metrics', async (req, res) => {
     res.set('Content-Type', register.contentType);
     res.end(await register.metrics());
 });
-// Use 8081 so it doesn't clash with the producer
-app.listen(8081, '0.0.0.0', () => console.log('Producer Metrics running on port 8081'));
+app.listen(8081, '0.0.0.0', () => console.log('Consumer metrics on :8081 (Kafka:', KAFKA + ')'));
 
-
-// --- 2. YOUR EXISTING CONSUMER CODE ---
-mongoose.connect('mongodb://mongodb:27017/ecommerce'); // Note: changed 127.0.0.1 to 'mongodb' for K8s compatibility
+mongoose.connect(MONGODB_URI);
 
 const eventSchema = new mongoose.Schema({
     user_id: String, event_type: String, product_id: String, timestamp: String, price: Number
 });
 const Event = mongoose.model('Event', eventSchema);
 
-const client = new kafka.KafkaClient({ kafkaHost: 'kafka:9092' });
+const client = new kafka.KafkaClient({ kafkaHost: KAFKA });
 const consumer = new kafka.Consumer(client, [{ topic: 'ecommerce-events', partition: 0 }], { autoCommit: true });
 
 consumer.on('message', async (message) => {
     const data = JSON.parse(message.value);
 
-    // 🔥 TRACK PROCESSING DELAY (Current Time - Event Time)
     const eventTime = new Date(data.timestamp).getTime();
     const delayMs = Date.now() - eventTime;
-    processingLatency.observe(delayMs); 
-    
-    // 🔥 TRACK PROCESSING COUNT
+    processingLatency.observe(delayMs);
+
     eventsProcessedCounter.inc();
 
     console.log(`Processed ${data.event_type} | Delay: ${delayMs}ms`);

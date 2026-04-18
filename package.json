@@ -12,7 +12,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "kafka-node": "^5.0.0",
-    "mongoose": "^9.3.3",
+    "mongoose": "^9.4.1",
     "prom-client": "^15.1.3"
   }
 }

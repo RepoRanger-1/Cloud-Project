@@ -4,8 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 
-COPY producer.js ./
+COPY apiProducer.js ./
 
-EXPOSE 8080
+EXPOSE 4000
 ENV KAFKA_BOOTSTRAP_SERVERS=kafka:9092
-CMD ["node", "producer.js"]
+CMD ["node", "apiProducer.js"]

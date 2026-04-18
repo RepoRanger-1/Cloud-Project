@@ -1,4 +1,5 @@
-# 1. Expose the Producer port
+# Metrics endpoints for Prometheus (see prometheus.yaml). ServiceMonitor CRDs removed so this works
+# without kube-prometheus-stack.
 apiVersion: v1
 kind: Service
 metadata:
@@ -13,22 +14,6 @@ spec:
     port: 8080
     targetPort: 8080
 ---
-# 2. Tell Prometheus to scrape the Producer
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: producer-monitor
-  labels:
-    release: monitoring  
-spec:
-  selector:
-    matchLabels:
-      app: producer
-  endpoints:
-  - port: metrics
-    interval: 5s
----
-# 3. Expose the Consumer port
 apiVersion: v1
 kind: Service
 metadata:
@@ -42,18 +27,3 @@ spec:
   - name: metrics
     port: 8081
     targetPort: 8081
----
-# 4. Tell Prometheus to scrape the Consumer
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: consumer-monitor
-  labels:
-    release: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: consumer
-  endpoints:
-  - port: metrics
-    interval: 5s

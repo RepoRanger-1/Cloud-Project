@@ -11,26 +11,49 @@ spec:
     metadata:
       labels:
         app: spark
-      annotations:                     
-        prometheus.io/scrape: "true"
-        prometheus.io/port: "8081"
     spec:
+      securityContext:
+        fsGroup: 185
+      
+      # --- ADDED THIS BLOCK ---
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        command: ["sh", "-c", "chown -R 185:185 /app/data"]
+        volumeMounts:
+        - name: pipeline-data
+          mountPath: /app/data
+      # ------------------------
+
       containers:
       - name: spark
-        image: docker.io/library/spark:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8081 
-          name: metrics
+        image: spark:latest
+        imagePullPolicy: Never
+        securityContext:
+          runAsUser: 185
+          runAsNonRoot: true
+        env:
+        - name: PIPELINE_DATA_DIR
+          value: "/app/data"
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: MONGO_SPARK_URI
+          value: "mongodb://mongodb:27017"
         command: ["/opt/spark/bin/spark-submit"]
         args:
           - "--conf"
           - "spark.jars.ivy=/tmp/.ivy2"
-          - "--driver-memory"         
-          - "512m"                    
-          - "--executor-memory"       
-          - "512m"                    
+          - "--driver-memory"
+          - "512m"
+          - "--executor-memory"
+          - "512m"
           - "--packages"
-          # ⬇️ CHANGE 10.2.0 to 10.4.0 HERE ⬇️
           - "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.mongodb.spark:mongo-spark-connector_2.12:10.4.0"
           - "/app/spark_stream.py"
+        volumeMounts:
+        - name: pipeline-data
+          mountPath: /app/data
+      volumes:
+      - name: pipeline-data
+        persistentVolumeClaim:
+          claimName: ecommerce-pipeline-pvc

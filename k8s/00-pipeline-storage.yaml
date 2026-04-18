@@ -1,0 +1,30 @@
+# Local / single-node clusters: RWX hostPath lets the Spark Deployment and Batch Job share Parquet data.
+# On some cloud providers, replace this with a shared filesystem (EFS, Filestore) or run batch via
+# `kubectl exec` into the Spark pod after data lands.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: ecommerce-pipeline-pv
+spec:
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ecommerce-manual
+  hostPath:
+    path: /tmp/ecommerce-pipeline-data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ecommerce-pipeline-pvc
+spec:
+  storageClassName: ecommerce-manual
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 2Gi
