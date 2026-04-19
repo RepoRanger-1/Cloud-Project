@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: phase7-autoscaler
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: phase7-autoscaler-role
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments", "deployments/scale"]
+    verbs: ["get", "list", "patch", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: phase7-autoscaler-binding
+subjects:
+  - kind: ServiceAccount
+    name: phase7-autoscaler
+roleRef:
+  kind: Role
+  name: phase7-autoscaler-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: phase7-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: phase7-autoscaler
+  template:
+    metadata:
+      labels:
+        app: phase7-autoscaler
+    spec:
+      serviceAccountName: phase7-autoscaler
+      containers:
+        - name: autoscaler
+          image: phase7-autoscaler:latest
+          imagePullPolicy: Never
+          ports:
+            - name: metrics
+              containerPort: 9102
+          env:
+            - name: PROMETHEUS_URL
+              value: "http://prometheus:9090"
+            - name: TARGET_NAMESPACE
+              value: "default"
+            - name: TARGET_DEPLOYMENT
+              value: "consumer"
+            - name: MIN_REPLICAS
+              value: "1"
+            - name: MAX_REPLICAS
+              value: "6"
+            - name: LAG_TARGET
+              value: "250"
+            - name: DELAY_SLA_MS
+              value: "1200"
+            - name: W_LAG
+              value: "0.45"
+            - name: W_DELAY
+              value: "0.35"
+            - name: W_TREND
+              value: "0.25"
+            - name: W_COST
+              value: "0.20"
+            - name: UP_THRESHOLD
+              value: "1.0"
+            - name: DOWN_THRESHOLD
+              value: "0.35"
+            - name: UP_CONFIRM
+              value: "2"
+            - name: DOWN_CONFIRM
+              value: "3"
+            - name: STEP_UP
+              value: "1"
+            - name: STEP_DOWN
+              value: "1"
+            - name: COOLDOWN_SECONDS
+              value: "60"
+            - name: LOOP_SECONDS
+              value: "30"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: phase7-autoscaler
+spec:
+  selector:
+    app: phase7-autoscaler
+  ports:
+    - name: metrics
+      port: 9102
+      targetPort: 9102

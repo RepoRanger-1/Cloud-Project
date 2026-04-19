@@ -27,3 +27,12 @@ spec:
           value: "kafka:9092"
         - name: MONGODB_URI
           value: "mongodb://mongodb:27017/ecommerce"
+        - name: KAFKA_CONSUMER_GROUP
+          value: "ecommerce-consumer-group"
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"

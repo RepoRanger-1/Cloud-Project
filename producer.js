@@ -3,6 +3,7 @@ const express = require('express');
 const promClient = require('prom-client');
 
 const KAFKA = process.env.KAFKA_BOOTSTRAP_SERVERS || 'localhost:9092';
+const EVENT_INTERVAL_MS = Number(process.env.EVENT_INTERVAL_MS || 1000);
 
 // --- 1. METRICS SETUP ---
 const app = express();
@@ -55,7 +56,7 @@ producer.on('ready', () => {
                 eventsSentCounter.inc();
             }
         });
-    }, 1000);
+    }, EVENT_INTERVAL_MS);
 });
 
 producer.on('error', (err) => {

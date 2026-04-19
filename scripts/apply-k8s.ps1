@@ -14,5 +14,8 @@ kubectl apply -f (Join-Path $k8s "api-producer.yaml")
 kubectl apply -f (Join-Path $k8s "spark.yaml")
 kubectl apply -f (Join-Path $k8s "monitoring-config.yaml")
 kubectl apply -f (Join-Path $k8s "prometheus.yaml")
+kubectl apply -f (Join-Path $k8s "kafka-exporter.yaml")
 
-Write-Host "Applied. Wait for pods Ready, then port-forward Prometheus (see project instructions)."
+Write-Host "Applied base stack. For Phase 7 run either:"
+Write-Host "  kubectl apply -f k8s/phase7-baseline-hpa.yaml   (baseline)"
+Write-Host "  kubectl apply -f k8s/phase7-autoscaler.yaml     (proposed)"

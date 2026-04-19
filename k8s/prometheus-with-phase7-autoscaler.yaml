@@ -1,0 +1,25 @@
+# Apply this only when phase7-autoscaler is deployed; then restart Prometheus so it scrapes /metrics.
+# kubectl apply -f k8s/prometheus-with-phase7-autoscaler.yaml
+# kubectl rollout restart deployment/prometheus
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 5s
+      evaluation_interval: 5s
+    scrape_configs:
+      - job_name: producer
+        static_configs:
+          - targets: ['producer-metrics:8080']
+      - job_name: consumer
+        static_configs:
+          - targets: ['consumer-metrics:8081']
+      - job_name: kafka-exporter
+        static_configs:
+          - targets: ['kafka-exporter:9308']
+      - job_name: phase7-autoscaler
+        static_configs:
+          - targets: ['phase7-autoscaler:9102']

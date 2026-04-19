@@ -25,3 +25,5 @@ spec:
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "kafka:9092"
+        - name: EVENT_INTERVAL_MS
+          value: "1000"

@@ -8,4 +8,5 @@ COPY consumer.js ./
 
 EXPOSE 8081
 ENV KAFKA_BOOTSTRAP_SERVERS=kafka:9092
+ENV KAFKA_CONSUMER_GROUP=ecommerce-consumer-group
 CMD ["node", "consumer.js"]
