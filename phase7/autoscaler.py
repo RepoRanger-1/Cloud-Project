@@ -156,7 +156,7 @@ def main() -> None:
                 print(
                     f"Scaled {s.deployment}: {replicas} -> {desired} | "
                     f"risk={risk_score:.3f} lag={lag:.1f} p95={p95_delay:.1f} "
-                    f"in_rate={in_rate:.2f} out_rate={out_rate:.2f}"
+                    f"in_rate={in_rate:.2f} out_rate={out_rate:.2f}", flush = True
                 )
                 cooldown_until = now + s.cooldown_seconds
                 up_hits = 0
@@ -164,7 +164,7 @@ def main() -> None:
         else:
             print(
                 f"Cooldown active; hold {replicas}. risk={risk_score:.3f} lag={lag:.1f} "
-                f"p95={p95_delay:.1f} in_rate={in_rate:.2f} out_rate={out_rate:.2f}"
+                f"p95={p95_delay:.1f} in_rate={in_rate:.2f} out_rate={out_rate:.2f}", flush = True
             )
 
         risk_gauge.set(risk_score)

@@ -56,7 +56,7 @@ producer.on('ready', () => {
                 eventsSentCounter.inc();
             }
         });
-    }, EVENT_INTERVAL_MS);
+    }, EVENT_INTERVAL_MS*0.5);
 });
 
 producer.on('error', (err) => {

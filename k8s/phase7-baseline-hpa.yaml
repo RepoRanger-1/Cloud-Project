@@ -8,7 +8,7 @@ spec:
     kind: Deployment
     name: consumer
   minReplicas: 1
-  maxReplicas: 6
+  maxReplicas: 15
   behavior:
     scaleUp:
       stabilizationWindowSeconds: 0

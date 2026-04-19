@@ -44,22 +44,52 @@ const consumer = new kafka.ConsumerGroup({
     autoCommit: true,
     fromOffset: 'latest',
     protocol: ['roundrobin'],
-    encoding: 'utf8'
+    encoding: 'utf8',
+    fetchMaxBytes: 1024 * 50,  // Strictly limit batch to 50 KB (insanely safe)
+    fetchMaxWaitMs: 100,       // Max wait time to build the batch
+    sessionTimeout: 30000,     
+    heartbeatInterval: 5000    // Force a heartbeat ping every 5 seconds
 }, ['ecommerce-events']);
 
+let activeWrites = 0;
+const MAX_CONCURRENT_WRITES = 50; // The max number of simultaneous DB connections
+let isPaused = false;
+
 consumer.on('message', async (message) => {
-    const data = JSON.parse(message.value);
+    activeWrites++;
+    if (activeWrites >= MAX_CONCURRENT_WRITES && !isPaused) {
+        console.log(`Traffic jam! Pausing Kafka... (${activeWrites} active DB writes)`);
+        consumer.pause();
+        isPaused = true;
+    }
 
-    const eventTime = new Date(data.timestamp).getTime();
-    const delayMs = Date.now() - eventTime;
-    processingLatency.observe(delayMs);
+    try {
+        const data = JSON.parse(message.value);
 
-    eventsProcessedCounter.inc();
+        const eventTime = new Date(data.timestamp).getTime();
+        const delayMs = Date.now() - eventTime;
+        processingLatency.observe(delayMs);
 
-    console.log(`Processed ${data.event_type} | Delay: ${delayMs}ms`);
+        eventsProcessedCounter.inc();
+        
+        // Removed console.log here so it doesn't crash your terminal during 50x bursts!
+        
+        const newEvent = new Event(data);
+        await newEvent.save(); // Node.js yields here while Mongo does the work
 
-    const newEvent = new Event(data);
-    await newEvent.save();
+    } catch (err) {
+        console.error('Error saving event:', err);
+    } finally {
+        // 2. RELEASE: Decrement counter when the DB write is completely finished
+        activeWrites--;
+        
+        // 3. RESUME: If the queue is cleared out, turn the traffic light green
+        if (activeWrites < MAX_CONCURRENT_WRITES && isPaused) {
+            console.log(`Queue drained. Resuming Kafka...`);
+            consumer.resume();
+            isPaused = false;
+        }
+    }
 });
 
 consumer.on('error', (err) => console.error('Consumer error:', err));
